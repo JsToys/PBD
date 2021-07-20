@@ -31,8 +31,12 @@ class particleSetData :
         self.NextPos = InitPos
         self.NextVel = InitVel
 
-        print("Current Particle Position : ", self.CurrPos)
-        print("Current Particle Velocity : ", self.CurrVel)
+        print("Current Particle Position : \n{}\n\n".format(self.CurrPos))
+        print("Current Particle Velocity : \n{}\n\n".format(self.CurrVel))
+
+
+
+
 
 class readInputs :
 
@@ -48,44 +52,67 @@ class readInputs :
     def parsingInputFile(self,dirInputFile):
         f = open(dirInputFile,'r')
         lines = f.readlines()
-        ## 01. Parsing Analysis Parameters    
         for ii,line in enumerate(lines) :
             try : 
                 varNameAndValue = line.split('!')[0]
                 varName = varNameAndValue.split('=')[0]
                 varValue= varNameAndValue.split('=')[1]
+                
+                ## 01. Parsing Analysis Parameters    
                 if varName == "DT"                  : self.dt = float(varValue)
                 if varName == "DT"                  : self.newDt = float(varValue)
                 if varName == "CFL"                 : self.cfl = float(varValue)
                 if varName == "SizeOfParticle"      : self.p_Radius = float(varValue)
-                if varName == "NumberOfParticles"   : self.p_Number = float(varValue)
+                
+                ## 02. Parsing Particle Properties & Variable     
+                if varName == "initialPosition_CenterX" : self.init_PosCenX = float(varValue)
+                if varName == "initialPosition_CenterY" : self.init_PosCenY = float(varValue)
+                if varName == "initialPosition_SizeX" : self.init_PosSizX = float(varValue)
+                if varName == "initialPosition_SizeY" : self.init_PosSizY = float(varValue)
+                if varName == "initialVelocity_X" : self.init_VelX = float(varValue)
+                if varName == "initialVelocity_Y" : self.init_VelY = float(varValue)
             except : 
                 print("Check {}-th line in \"{}\" => {}".format(ii, dirInputFile,line))
- 
-        ## 02. Parsing Particle Properties & Variable
-        self.InitPos = np.array([1,2,3])
-        self.InitVel = np.array([2,3,4])
+        self.arrangeInitialParticles()
+        # self.InitPos = np.array([1,2,3])
+        # self.InitVel = np.array([2,3,4])
+        self.p_Number = len(self.InitPos[0])
+
+    def arrangeInitialParticles(self):
+        self.InitPosCen = [self.init_PosCenX, self.init_PosCenY]
+        self.InitPosSiz = [self.init_PosSizX, self.init_PosSizY]
+        x = np.arange(-self.InitPosSiz[0]/2+self.p_Radius,self.InitPosSiz[0]/2-self.p_Radius,2*self.p_Radius) + self.InitPosCen[0]
+        y = np.arange(-self.InitPosSiz[1]/2+self.p_Radius,self.InitPosSiz[1]/2-self.p_Radius,2*self.p_Radius) + self.InitPosCen[1]
+        X,Y = np.meshgrid(x,y)
+        self.InitPos = np.array([X.flatten(), Y.flatten()])
+        self.InitVel = np.array([X.flatten()*0.0+self.init_VelX, Y.flatten()*0.0+self.init_VelY])
 
 
 
 
 
 
-class setupAnalysis :
+
+
+class setupSimulation :
     def __init__(self,dirInputFile): 
         self.simulationData = readInputs(dirInputFile)
 
-    def calculateVariousDt(self,ParticleSize, velocity, CFL):
-        self.simulationData.analysisData.newDt = min(self.simulationData.analysisData.CFL * self.simulationData.analysisData.ParticleSize / self.simulationData.particleData.velocity)
+    def calculateVariousDt(self):
+        velmax = max((self.simulationData.particleData.CurrVel[0]**2 + self.simulationData.particleData.CurrVel[1]**2)**0.5)
+        cfl = self.simulationData.analysisData.cfl
+        p_Radius = self.simulationData.analysisData.p_Radius
+        self.simulationData.analysisData.newDt = cfl * p_Radius / velmax
 
     def calculateNextPostion(self):
         self.simulationData.particleData.NextPos= self.simulationData.particleData.CurrPos + self.simulationData.analysisData.newDt * self.simulationData.particleData.CurrVel
-        print("Caculated Next Position (dt={}): {}".format(self.simulationData.analysisData.newDt,self.simulationData.particleData.NextPos))
+        print("Caculated Next Position (dt={}, newDt={}): \n{}\n\n".format(self.simulationData.analysisData.dt,self.simulationData.analysisData.newDt,self.simulationData.particleData.NextPos))
         
     
 
 dirInputFile = '../test.input'
-SIMULATION = setupAnalysis(dirInputFile)
+SIMULATION = setupSimulation(dirInputFile)
+SIMULATION.calculateVariousDt()
 SIMULATION.calculateNextPostion()
 
 
