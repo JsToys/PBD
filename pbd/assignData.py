@@ -47,18 +47,24 @@ class readInputs :
 
     def parsingInputFile(self,dirInputFile):
         f = open(dirInputFile,'r')
-        ## Analysis Parameters        
-        self.dt = 1 
-        self.cfl = 1 
-        self.newDt = 1
-
-        self.p_Radius = 12
-        self.p_Number = 3
-
-        ## Particle Properties & Variable
+        lines = f.readlines()
+        ## 01. Parsing Analysis Parameters    
+        for ii,line in enumerate(lines) :
+            try : 
+                varNameAndValue = line.split('!')[0]
+                varName = varNameAndValue.split('=')[0]
+                varValue= varNameAndValue.split('=')[1]
+                if varName == "DT"                  : self.dt = float(varValue)
+                if varName == "DT"                  : self.newDt = float(varValue)
+                if varName == "CFL"                 : self.cfl = float(varValue)
+                if varName == "SizeOfParticle"      : self.p_Radius = float(varValue)
+                if varName == "NumberOfParticles"   : self.p_Number = float(varValue)
+            except : 
+                print("Check {}-th line in \"{}\" => {}".format(ii, dirInputFile,line))
+ 
+        ## 02. Parsing Particle Properties & Variable
         self.InitPos = np.array([1,2,3])
         self.InitVel = np.array([2,3,4])
-        return
 
 
 

@@ -1,3 +1,5 @@
 Analysis Input
- ! DT
- ! 
+DT= 0.1 ! DT
+CFL= 1 ! for °¡º¯DT 
+SizeOfParticle= 1 !
+NumberOfParticles= 12 !
